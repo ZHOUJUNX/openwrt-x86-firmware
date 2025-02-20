@@ -12,7 +12,7 @@
 
 # Modify default IP
 echo '### Updates default IP gate ###'
-sed -i 's/192.168.1.1/10.1.1.10/g' package/base-files/luci2/bin/config_generate
+sed -i 's/192.168.1.1/172.16.253.254/g' package/base-files/luci2/bin/config_generate
 echo '###  ###'
 
 # echo '### Updates Theme Argon ###'
