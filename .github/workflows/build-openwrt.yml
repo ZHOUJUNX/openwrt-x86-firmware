@@ -19,7 +19,7 @@ on:
         description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
         required: false
         default: false
-
+        
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
@@ -36,25 +36,24 @@ env:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-22.04
            
     steps:
 
-    # - name: Free Disk Space (Ubuntu)
-    #   uses: jlumbroso/free-disk-space@main
-    #   with:
-    #     # this might remove tools that are actually needed,
-    #     # if set to "true" but frees about 6 GB
-    #     tool-cache: false
+    - name: Free Disk Space (Ubuntu)
+      uses: jlumbroso/free-disk-space@main
+      with:
+        # this might remove tools that are actually needed,
+        # if set to "true" but frees about 6 GB
+        tool-cache: true
         
-    #     # all of these default to true, but feel free to set to
-    #     # "false" if necessary for your workflow
-    #     android: true
-    #     dotnet: true
-    #     haskell: true
-    #     large-packages: true
-    #     docker-images: true
-    #     swap-storage: true
+        # all of these default to true, but feel free to set to
+        # "false" if necessary for your workflow
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        swap-storage: true
         
     - name: Checkout
       uses: actions/checkout@main
@@ -68,16 +67,16 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        # sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
         sudo -E apt-get -qq update
         sudo -E apt-get -qq full-upgrade
-        sudo -E apt-get -qq install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
-                    bzip2 ccache clang cmake cpio curl device-tree-compiler flex gawk gcc-multilib g++-multilib gettext \
-                    genisoimage git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev \
-                    libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev \
-                    libreadline-dev libssl-dev libtool llvm lrzsz msmtp ninja-build p7zip p7zip-full patch pkgconf \
-                    python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion \
-                    swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+        sudo -E sudo apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
+                bzip2 ccache clang cmake cpio curl device-tree-compiler flex gawk gcc-multilib g++-multilib gettext \
+                genisoimage git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev \
+                libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev \
+                libreadline-dev libssl-dev libtool llvm lrzsz msmtp ninja-build p7zip p7zip-full patch pkgconf \
+                python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion \
+                swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
@@ -88,7 +87,6 @@ jobs:
       working-directory: /workdir
       run: |
         df -hT $PWD
-        sudo rm -rf /workdir/openwrt/
         git clone $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
@@ -97,6 +95,7 @@ jobs:
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
         chmod +x $DIY_P1_SH
         cd openwrt
+        # git checkout cabbef2b4e4618e8acd4f0819642b1e6d5e7e1ae
         $GITHUB_WORKSPACE/$DIY_P1_SH
 
     - name: Update feeds
@@ -113,10 +112,10 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
-    # - name: Debugging with tmate
-    #   # Enable tmate debugging of manually-triggered workflows if the input option was provided
-    #   uses: mxschmitt/action-tmate@v3
-    #   if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+    - name: Debugging with tmate
+      # Enable tmate debugging of manually-triggered workflows if the input option was provided
+      uses: mxschmitt/action-tmate@v3
+      if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
     - name: Download package
       id: package
@@ -222,7 +221,7 @@ jobs:
       uses: dev-drprasad/delete-older-releases@v0.1.0
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
-        keep_latest: 10
+        keep_latest: 4
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
